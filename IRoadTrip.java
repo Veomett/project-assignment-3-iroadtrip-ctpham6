@@ -80,8 +80,15 @@ public class IRoadTrip {
 
 
     public int getDistance (String country1, String country2) {
-        // Replace with your code
-        return -1;
+        if ((map.find(country1) == true) && (map.find(country2) == true)) {
+        	if (map.isBorder(country1, country2) == true) {
+        		return(map.getDistance(country1, country2));
+        	} else {
+        		return -1;
+        	}
+        } else {
+        	return -1;	
+        }
     }
 
 
@@ -133,7 +140,8 @@ public class IRoadTrip {
 
     public static void main(String[] args) {
         IRoadTrip a3 = new IRoadTrip(args);
-
+        
+        System.out.println(a3.getDistance("North korea", "south korea"));
         a3.acceptUserInput();
     }
 
@@ -290,6 +298,76 @@ class worldMap{
 		return countryList.get(countryList.indexOf(country)).stranded;
 	}
 	
+	public boolean isBorder(String c1, String c2) {
+		Country country1 = null;
+		Country country2 = null;
+		int found = 0;
+		for (Country c : countryList) {
+			if ((c.name.equals(c1.toUpperCase())) || (c1.toUpperCase().equals(c.name))) {
+				country1 = c;
+			} else if ((c.name.equals(c2.toUpperCase())) || (c2.toUpperCase().equals(c.name))) {
+				country2 = c;
+			} else{
+				for (int i = 0; i < c.alias.size(); i++) {
+					if ((c.alias.get(i).toUpperCase().equals(c1.toUpperCase())) || (c1.toUpperCase().equals(c.alias.get(i).toUpperCase()))) {
+						country1 = c;
+					}
+					
+					if ((c.alias.get(i).toUpperCase().equals(c2.toUpperCase())) || (c2.toUpperCase().equals(c.alias.get(i).toUpperCase()))) {
+						country2 = c;
+					}
+				}
+			}
+		}
+		
+		for (int i = 0; i < country1.borders.size(); i++) {
+			if (country1.borders.get(i).toUpperCase().equals(c2.toUpperCase())) {
+				found = -1;
+				break;
+			}
+		}
+		if (found == 0) {
+			return(false);
+		}
+
+		return true;
+	}
+	
+	public int getDistance(String country1, String country2) {
+		Country c1 = null;
+		Country c2 = null;
+		for (Country c : countryList) {
+			if ((c.name.equals(country1.toUpperCase())) || (country1.toUpperCase().equals(c.name))) {
+				c1 = c;
+			} else{
+				for (int i = 0; i < c.alias.size(); i++) {
+					if ((c.alias.get(i).toUpperCase().equals(country1.toUpperCase())) || (country1.toUpperCase().equals(c.alias.get(i).toUpperCase()))) {
+						c1 = c;
+					}
+
+				}
+			}
+		}
+		
+		for (Country c : countryList) {
+			if ((c.name.equals(country2.toUpperCase())) || (country2.toUpperCase().equals(c.name))) {
+				c2 = c;
+			} else{
+				for (int i = 0; i < c.alias.size(); i++) {
+					if ((c.alias.get(i).toUpperCase().equals(country2.toUpperCase())) || (country1.toUpperCase().equals(c.alias.get(i).toUpperCase()))) {
+						c2 = c;
+					}
+
+				}
+			}
+		}
+		
+		for (int i = 0; i < c1.capitalDistances.size(); i++) {
+			return (c1.capitalDistances.get(c2.uniqueID));
+		}
+		return -1;
+	}
+	
 	public ArrayList travel(String start, String end) {
 		Country startC = null;
 		Country endC = null;
@@ -310,7 +388,7 @@ class worldMap{
 					}
 					
 					if ((c.alias.get(i).toUpperCase().equals(end.toUpperCase())) || (end.toUpperCase().equals(c.alias.get(i).toUpperCase()))) {
-						startC = c;
+						endC = c;
 					}
 				}
 			}
