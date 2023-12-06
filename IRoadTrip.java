@@ -71,7 +71,7 @@ public class IRoadTrip {
     	}
     	
     	
-    	map.printGraphedCountries();
+//    	map.printGraphedCountries();
     }
 
 
@@ -225,6 +225,19 @@ class worldMap{
 		String endCoun = distLine.split(",")[3];
 		String distanceStrKM = distLine.split(",")[4];
 		Integer distKM = Integer.parseInt(distanceStrKM);
+		for (Country c : countryList) {
+			if ((c.uniqueID != null) && (c.uniqueID.equals(startCoun))) {
+				for (Country c2 : countryList) {
+					if ((c2.uniqueID != null) && (c2.uniqueID.equals(endCoun))) {
+						if (c2.stranded) {
+							return;
+						}
+					}
+				}
+				
+				c.addCapDist(endCoun, distKM);
+			}
+		}
 	}
 	
 	public boolean find(String toFind) {
@@ -244,7 +257,8 @@ class worldMap{
 	
 	public void printGraphedCountries() {
 		for (Country c: countryList) {
-			System.out.println(c.name + " is to: " + c.uniqueID);
+			System.out.println(c.name + " is to: " + c.uniqueID + " with borders: " + c.capitalDistances);
+			System.out.println("I have [" + c.capitalDistances.size() + "] borders!");
 		}
 	}
 	
