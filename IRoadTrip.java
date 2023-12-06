@@ -240,13 +240,6 @@ class worldMap{
 		}
 	}
 	
-	public boolean find(String toFind) {
-		if (countryList.contains(toFind)) {
-			return true;
-		}
-		return false;
-	}
-	
 	public boolean isStranded(String country) {
 		return countryList.get(countryList.indexOf(country)).stranded;
 	}
@@ -274,7 +267,7 @@ class Country{
 	String name;
 	String uniqueID;
 	List<String> alias = new ArrayList<>();
-	Country[] borders;
+	List<String> borders = new ArrayList<>();
 	Boolean stranded = false;
 	
 	Hashtable<String, Integer> capitalDistances = new Hashtable<>();
@@ -290,6 +283,25 @@ class Country{
 		
 		if (borderString == null) {
 			stranded = true;
+		} else {
+			String counToAdd = "";
+			String[] borderList = borderString.split("; ");
+			for (int i = 0; i < borderList.length; i++) {
+				String[] analyzer = borderList[i].split(" ");
+				for (int j = 0; j < analyzer.length; j++) {
+					try {
+						Integer.parseInt(analyzer[j]);
+					} catch (NumberFormatException NFE) {
+						if ((! analyzer[j].equals("km")) && (! analyzer[j].contains(","))) {
+							counToAdd += analyzer[j];
+							counToAdd += " ";
+						}
+					}
+				}
+				counToAdd = counToAdd.strip();
+				addBorder(counToAdd);
+				counToAdd = "";
+			}
 		}
 		
 	}
@@ -306,4 +318,7 @@ class Country{
 		capitalDistances.put(destCounCode, distanceKM);
 	}
 	
+	public void addBorder(String border){
+		borders.add(border);
+	}
 }
