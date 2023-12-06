@@ -24,8 +24,9 @@ public class IRoadTrip {
     		Scanner ciaCountries = new Scanner(borders);
     		
     		String lineToExamine = null;
-    		
+
     		while (ciaCountries.hasNextLine()) {
+    			
     			lineToExamine = ciaCountries.nextLine();
     			map.add(lineToExamine);
     		}
@@ -34,6 +35,22 @@ public class IRoadTrip {
     		
     	} catch (FileNotFoundException FNFE) {
     		System.err.println("Border Text File Not Found");
+    		System.exit(0);
+    	}
+    	
+    	try {
+    		File stateName = new File(args[2]);
+    		Scanner stateIDs = new Scanner(stateName);
+    		String idLine = stateIDs.nextLine();
+    		
+    		while (stateIDs.hasNextLine()) {
+    			idLine = stateIDs.nextLine();
+    			map.couToCod(idLine);
+    		}
+    		
+    		stateIDs.close();
+    	} catch (FileNotFoundException FNFE) {
+    		System.err.println("State Names TSV File Not Found");
     		System.exit(0);
     	}
     	
@@ -47,16 +64,8 @@ public class IRoadTrip {
     		System.exit(0);
     	}
     	
-    	try {
-    		File stateName = new File(args[2]);
-    		Scanner stateIDs = new Scanner(stateName);
-    		stateIDs.close();
-    	} catch (FileNotFoundException FNFE) {
-    		System.err.println("State Names TSV File Not Found");
-    		System.exit(0);
-    	}
     	
-    	map.printGraphedCountries();
+//    	map.printGraphedCountries();
     }
 
 
@@ -127,6 +136,45 @@ class worldMap{
 		
 	}
 	
+	public void couToCod(String codeLine){
+		String[] analyzer = codeLine.split("	");
+		String backUp = "";
+		String stateID = analyzer[1];
+		String correspondingCountry = analyzer[2];
+		String endDate = analyzer[4];
+		
+		if (endDate.equals("2020-12-31")) {
+			for (Country c: countryList) {
+				if ((c.name.contains(correspondingCountry.toUpperCase())) || (correspondingCountry.toUpperCase().contains(c.name)) || (! c.name.equals("BRITISH INDIAN OCEAN TERRITORY") && (correspondingCountry.equals("India")))) {
+					c.setID(stateID);
+					if (c.name != correspondingCountry.toUpperCase()) {
+						if (correspondingCountry.contains("/")){
+							correspondingCountry = correspondingCountry.split("/")[1];
+						}
+						
+						if (correspondingCountry.contains("//(")) {
+							if (! correspondingCountry.equals("Myanmar (Burma)")) {
+								correspondingCountry = correspondingCountry.split("//(")[1].split("//)")[0];
+							} else {
+								correspondingCountry = "Myanmar";
+							}
+						}
+						c.addAlias(correspondingCountry.toUpperCase());
+					}
+					break;
+				} else if ((c.name.equals("GERMANY")) && (correspondingCountry.equals("German Federal Republic")) || (c.name.equals("ESWATINI")) && (correspondingCountry.equals("Swaziland")) || (c.name.equals("KOREA, NORTH")) && (correspondingCountry.equals("Korea, People's Republic of")) || (c.name.equals("KOREA, SOUTH")) && (correspondingCountry.equals("Korea, Republic of")) || (c.name.equals("TIMOR-LESTE")) && (correspondingCountry.equals("East Timor")) || (c.name.equals("KYRGYZSTAN")) && (correspondingCountry.equals("Kyrgyz Republic")) || (c.name.equals("CZECHIA")) && (correspondingCountry.equals("Czech Republic")) || (c.name.equals("NORTH MACEDONIA")) && (correspondingCountry.equals("Macedonia (Former Yugoslav Republic of)")) || (c.name.equals("BOSNIA AND HERZEGOVINA")) && (correspondingCountry.equals("Bosnia-Herzegovina")) || (c.name.equals("ROMANIA")) && (correspondingCountry.equals("Rumania")) || (c.name.equals("CABO VERDE")) && (correspondingCountry.equals("Cape Verde")) || (c.name.equals("COTE D'IVOIRE")) && (correspondingCountry.equals("Cote D’Ivoire")) || (c.name.equals("CONGO, DEMOCRATIC REPUBLIC OF THE")) && (correspondingCountry.equals("Congo, Democratic Republic of (Zaire)"))) {
+					c.setID(stateID);
+					c.addAlias(correspondingCountry.toUpperCase());
+					break;
+				}
+			}
+		}
+	}
+	
+	public void setCapDist(String codeLine){
+		
+	}
+	
 	public boolean find(String toFind) {
 		if (countryList.contains(toFind)) {
 			return true;
@@ -145,9 +193,6 @@ class worldMap{
 	public void printGraphedCountries() {
 		for (Country c: countryList) {
 			System.out.println(c.name);
-			if (c.getAlias() != null) {
-				System.out.println(c.getAlias());
-			}
 		}
 	}
 	
@@ -161,15 +206,19 @@ class worldMap{
 class Country{
 	
 	String name;
-	String alias = null;
+	String stateID;
+	List<String> alias = new ArrayList<>();
 	Country[] borders;
 	Boolean stranded = false;
-	Hashtable<String, Integer> borderAndValues = new Hashtable<>();
+	
+	Hashtable<String, Integer> capitalDistances = new Hashtable<>();
 	
 	Country(String entry, String otherEntry, String borderString){
 		
 		name = entry;
-		alias = otherEntry;
+		if (otherEntry != null) {
+			alias.add(otherEntry);
+		}
 		String borderName = "";
 		int borderDistance = -1;
 		
@@ -179,11 +228,12 @@ class Country{
 		
 	}
 	
-	public String getAlias(){
-		if (alias != null) {
-			return alias;
-		}
-		
-		return null;
+	public void setID(String toID) {
+		stateID = toID;
 	}
+	
+	public void addAlias(String toAdd) {
+		alias.add(toAdd);
+	}
+	
 }
