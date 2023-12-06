@@ -57,15 +57,21 @@ public class IRoadTrip {
     	try {
     		File capitalDistances = new File(args[1]);
     		Scanner capDist = new Scanner(capitalDistances);
-    		capDist.close();
+    		String distLine = capDist.nextLine();
     		
+    		while (capDist.hasNextLine()) {
+    			distLine = capDist.nextLine();
+    			map.setCapDist(distLine);
+    		}
+    		
+    		capDist.close();
     	} catch (FileNotFoundException FNFE) {
     		System.err.println("Capital Distance CSV File Not Found");
     		System.exit(0);
     	}
     	
     	
-//    	map.printGraphedCountries();
+    	map.printGraphedCountries();
     }
 
 
@@ -143,9 +149,49 @@ class worldMap{
 		String correspondingCountry = analyzer[2];
 		String endDate = analyzer[4];
 		
+		if (stateID.equals("IND")){
+			for (Country c: countryList) {
+				if (c.name.equals("INDIA")) {
+					c.setID(stateID);
+					return;
+				}
+			}
+		} else if (stateID.equals("GUI")) {
+			for (Country c: countryList) {
+				if (c.name.equals("GUINEA")) {
+					c.setID(stateID);
+					return;
+				}
+			}
+		} else if (stateID.equals("SUD")) {
+			for (Country c: countryList) {
+				if (c.name.equals("SUDAN")) {
+					c.setID(stateID);
+					return;
+				}
+			}
+		} else if (stateID.equals("TUR")) {
+			for (Country c: countryList) {
+				if (c.name.equals("TURKEY")) {
+					c.setID(stateID);
+					return;
+				}
+			}
+		} else if (stateID.equals("CON")) {
+			for (Country c: countryList) {
+				if (c.name.equals("CONGO, REPUBLIC OF THE")) {
+					c.setID(stateID);
+					return;
+				}
+			}
+		}
+		
 		if (endDate.equals("2020-12-31")) {
 			for (Country c: countryList) {
-				if ((c.name.contains(correspondingCountry.toUpperCase())) || (correspondingCountry.toUpperCase().contains(c.name)) || (! c.name.equals("BRITISH INDIAN OCEAN TERRITORY") && (correspondingCountry.equals("India")))) {
+				
+				if ((stateID.equals("DOM")) && (c.name.equals("DOMINICA")) || (stateID.equals("PNG")) && (c.name.equals("GUINEA")) || (stateID.equals("GNB")) && (c.name.equals("GUINEA")) || (stateID.equals("SOM")) && (c.name.equals("MALI")) || (stateID.equals("NIG")) && (c.name.equals("NIGER"))){
+					
+				} else if ((c.name.contains(correspondingCountry.toUpperCase())) || (correspondingCountry.toUpperCase().contains(c.name))) {
 					c.setID(stateID);
 					if (c.name != correspondingCountry.toUpperCase()) {
 						if (correspondingCountry.contains("/")){
@@ -159,7 +205,10 @@ class worldMap{
 								correspondingCountry = "Myanmar";
 							}
 						}
+						
+						
 						c.addAlias(correspondingCountry.toUpperCase());
+
 					}
 					break;
 				} else if ((c.name.equals("GERMANY")) && (correspondingCountry.equals("German Federal Republic")) || (c.name.equals("ESWATINI")) && (correspondingCountry.equals("Swaziland")) || (c.name.equals("KOREA, NORTH")) && (correspondingCountry.equals("Korea, People's Republic of")) || (c.name.equals("KOREA, SOUTH")) && (correspondingCountry.equals("Korea, Republic of")) || (c.name.equals("TIMOR-LESTE")) && (correspondingCountry.equals("East Timor")) || (c.name.equals("KYRGYZSTAN")) && (correspondingCountry.equals("Kyrgyz Republic")) || (c.name.equals("CZECHIA")) && (correspondingCountry.equals("Czech Republic")) || (c.name.equals("NORTH MACEDONIA")) && (correspondingCountry.equals("Macedonia (Former Yugoslav Republic of)")) || (c.name.equals("BOSNIA AND HERZEGOVINA")) && (correspondingCountry.equals("Bosnia-Herzegovina")) || (c.name.equals("ROMANIA")) && (correspondingCountry.equals("Rumania")) || (c.name.equals("CABO VERDE")) && (correspondingCountry.equals("Cape Verde")) || (c.name.equals("COTE D'IVOIRE")) && (correspondingCountry.equals("Cote D’Ivoire")) || (c.name.equals("CONGO, DEMOCRATIC REPUBLIC OF THE")) && (correspondingCountry.equals("Congo, Democratic Republic of (Zaire)"))) {
@@ -171,8 +220,11 @@ class worldMap{
 		}
 	}
 	
-	public void setCapDist(String codeLine){
-		
+	public void setCapDist(String distLine){
+		String startCoun = distLine.split(",")[1];
+		String endCoun = distLine.split(",")[3];
+		String distanceStrKM = distLine.split(",")[4];
+		Integer distKM = Integer.parseInt(distanceStrKM);
 	}
 	
 	public boolean find(String toFind) {
@@ -192,7 +244,7 @@ class worldMap{
 	
 	public void printGraphedCountries() {
 		for (Country c: countryList) {
-			System.out.println(c.name);
+			System.out.println(c.name + " is to: " + c.uniqueID);
 		}
 	}
 	
@@ -206,7 +258,7 @@ class worldMap{
 class Country{
 	
 	String name;
-	String stateID;
+	String uniqueID;
 	List<String> alias = new ArrayList<>();
 	Country[] borders;
 	Boolean stranded = false;
@@ -229,11 +281,15 @@ class Country{
 	}
 	
 	public void setID(String toID) {
-		stateID = toID;
+		uniqueID = toID;
 	}
 	
 	public void addAlias(String toAdd) {
 		alias.add(toAdd);
+	}
+	
+	public void addCapDist(String destCounCode, Integer distanceKM) {
+		capitalDistances.put(destCounCode, distanceKM);
 	}
 	
 }
