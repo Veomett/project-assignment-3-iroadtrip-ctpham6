@@ -5,7 +5,9 @@ import java.io.*;
 
 public class IRoadTrip {
 	worldMap map = new worldMap();
-	
+	String start = "";
+	String end = "";
+	String input = "";
     public IRoadTrip (String [] args) {
         // Replace with your code
     	
@@ -37,6 +39,8 @@ public class IRoadTrip {
     		System.err.println("Border Text File Not Found");
     		System.exit(0);
     	}
+    	
+    	map.aliasPolish();
     	
     	try {
     		File stateName = new File(args[2]);
@@ -91,6 +95,37 @@ public class IRoadTrip {
         // Replace with your code
     	Scanner userInput = new Scanner(System.in);
     	System.out.println("Enter the name of the first country (type EXIT to quit): ");
+    	input = userInput.nextLine();
+    	while (! input.equals("EXIT")) {
+    		while ((map.find(input) == false) && (! input.equals("EXIT"))){
+    			System.out.println("Invalid country name. Please enter a valid country name.");
+    			System.out.println("Enter the name of the first country (type EXIT to quit): ");
+    			input = userInput.nextLine();
+    		}
+    		
+    		if (input.equals("EXIT")) {
+    			System.exit(0);
+    		}
+    		start = input;
+    		
+    		
+    		System.out.println("Enter the name of the second country (type EXIT to quit): ");
+    		input = userInput.nextLine();
+    		while ((map.find(input) == false) && (! input.equals("EXIT"))){
+    			System.out.println("Invalid country name. Please enter a valid country name.");
+    			System.out.println("Enter the name of the second country (type EXIT to quit): ");
+    			input = userInput.nextLine();
+    		}
+    		
+    		if (input.equals("EXIT")) {
+    			System.exit(0);
+    		}
+    		end = input;
+    		
+    		System.out.println(map.travel(start,end));
+    		System.out.println("Enter the name of the first country (type EXIT to quit): ");
+    		input = userInput.nextLine();
+    	}
     	userInput.close();
         
     }
@@ -140,6 +175,17 @@ class worldMap{
 		countryList.add(new Country(countryName.toUpperCase(), alias, borderStr));
 		
 		
+	}
+	
+	public void aliasPolish() {
+		for (Country c : countryList) {
+			if (c.name.contains(",")) {
+				String newAlias = "";
+				newAlias += c.name.split(", ")[1] + " ";
+				newAlias += c.name.split(", ")[0];
+				c.addAlias(newAlias);
+			}
+		}
 	}
 	
 	public void couToCod(String codeLine){
@@ -244,8 +290,52 @@ class worldMap{
 		return countryList.get(countryList.indexOf(country)).stranded;
 	}
 	
-	public int travel(Country start, Country end) {
-		return -1;
+	public ArrayList travel(String start, String end) {
+		Country startC = null;
+		Country endC = null;
+		
+		if (start.toUpperCase().equals(end.toUpperCase())) {
+			System.out.println("* " + start + " --> " + end + " (0km.)");
+			return null;
+		}
+		for (Country c : countryList) {
+			if ((c.name.equals(start.toUpperCase())) || (start.toUpperCase().equals(c.name))) {
+				startC = c;
+			} else if ((c.name.equals(end.toUpperCase())) || (end.toUpperCase().equals(c.name))) {
+				endC = c;
+			} else{
+				for (int i = 0; i < c.alias.size(); i++) {
+					if ((c.alias.get(i).toUpperCase().equals(start.toUpperCase())) || (start.toUpperCase().equals(c.alias.get(i).toUpperCase()))) {
+						startC = c;
+					}
+					
+					if ((c.alias.get(i).toUpperCase().equals(end.toUpperCase())) || (end.toUpperCase().equals(c.alias.get(i).toUpperCase()))) {
+						startC = c;
+					}
+				}
+			}
+		}
+		
+		
+		
+		System.out.println(startC.name + " " + endC.name);
+		return null;
+	}
+	
+	public boolean find(String country) {
+		country = country.toUpperCase();
+		for (Country c : countryList) {
+			if ((c.name.equals(country)) || (country.equals(c.name))) {
+				return(true);
+			} else {
+				for (int i = 0; i < c.alias.size(); i++) {
+					if ((c.alias.get(i).toUpperCase().equals(country)) || (country.equals(c.alias.get(i).toUpperCase()))) {
+						return (true);
+					}
+				}
+			}
+		}
+		return (false);
 	}
 	
 	public void printGraphedCountries() {
