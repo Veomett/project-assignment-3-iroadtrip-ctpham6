@@ -8,6 +8,7 @@ public class IRoadTrip {
 	String start = "";
 	String end = "";
 	String input = "";
+	ArrayList<String> result;
     public IRoadTrip (String [] args) {
         // Replace with your code
     	
@@ -76,6 +77,7 @@ public class IRoadTrip {
     	
     	
 //    	map.printGraphedCountries();
+//    	map.printAlias();
     }
 
 
@@ -129,7 +131,7 @@ public class IRoadTrip {
     		}
     		end = input;
     		
-    		System.out.println(map.travel(start,end));
+    		map.travel(start,end);
     		System.out.println("Enter the name of the first country (type EXIT to quit): ");
     		input = userInput.nextLine();
     	}
@@ -258,14 +260,17 @@ class worldMap{
 							correspondingCountry = correspondingCountry.split("/")[1];
 						}
 						
-						if (correspondingCountry.contains("//(")) {
-							if (! correspondingCountry.equals("Myanmar (Burma)")) {
-								correspondingCountry = correspondingCountry.split("//(")[1].split("//)")[0];
-							} else {
-								correspondingCountry = "Myanmar";
-							}
+						try{
+							correspondingCountry = correspondingCountry.split("[\\(\\)]")[1];
+						} catch (ArrayIndexOutOfBoundsException AIOOBE) {
+							
 						}
-						
+						if (correspondingCountry.equals("Myanmar (Burma)")) {
+							correspondingCountry = "Myanmar";
+						} else if (correspondingCountry.equals("Myanmar (Burma)")) {
+							correspondingCountry = "Myanmar";
+						}
+
 						
 						c.addAlias(correspondingCountry.toUpperCase());
 
@@ -378,12 +383,15 @@ class worldMap{
 		Country startC = null;
 		Country endC = null;
 		
-		if (start.toUpperCase().equals(end.toUpperCase())) {
-			System.out.println("* " + start + " --> " + end + " (0km.)");
+		startC = getEntry(start);
+		
+		endC = getEntry(end);
+		
+		if (startC == endC) {
+			System.out.println("* " + startC + " --> " + endC + " (0km.)");
 			return null;
 		}
-		startC = getEntry(start);
-		endC = getEntry(end);
+		
 		
 		if ((startC.stranded == true) || (endC.stranded == true)) {
 			ArrayList<String> welp = new ArrayList<>();
@@ -425,15 +433,46 @@ class worldMap{
 	
 	public ArrayList getPathing(Country A, Country B) {
 		
-		ArrayList<String> pathing = new ArrayList<>();
+		if (B.path.equals("")) {
+			System.err.println("A path between " + A.name + " and " + B.name + " is not possible");
+			return null;
+		}
 		
-		while (! B.path.equals("") || (! B.path.equals(A.uniqueID))) {
+		int dist = 0;
+		ArrayList<String> pathing = new ArrayList<>();
+		Country medium = B;
+		String befName = "";
+		String medName = "";
+		
+		while (! B.path.equals("") && (! B.path.equals(A.uniqueID))) {
 			pathing.add(B.path);
 			for (Country c : countryList) {
 				if ((c.uniqueID != null) && (c.uniqueID.equals(B.path))) {
 					B = c;
 					break;
 				}
+			}
+		}
+		
+		for (int i = pathing.size(); i > -1; i--) {
+			for (Country c : countryList) {
+				if (c.uniqueID != null) {
+					if ((i != 0) && (c.uniqueID.equals(pathing.get(i-1)))) {
+						befName = c.name;
+						dist += c.cost;
+					} else if  ((i != pathing.size()) && (c.uniqueID.equals(pathing.get(i)))) {
+						medName = c.name;
+					}
+					
+				}
+			}
+			if (i == 0) {
+				dist += medium.cost;
+				System.out.println("* " + medName + " --> " + medium.name + " (" + dist + " km.)");
+			} else if (i == pathing.size()) {
+				System.out.println("* " + A.name + " --> " + befName + " (" + dist + " km.)");
+			} else {
+				System.out.println("* " + medName + " --> " + befName + " (" + dist + " km.)");
 			}
 		}
 		
@@ -478,6 +517,13 @@ class worldMap{
 		}
 	}
 	
+	public void printAlias() {
+		for (Country c: countryList) {
+			for (int i = 0; i < c.alias.size(); i++) {
+				System.out.println(c.alias.get(i));
+			}
+		}
+	}
 	
 	public void resetTravel() {
 		for (Country c: countryList) {
@@ -509,7 +555,11 @@ class Country{
 	Country(String entry, String otherEntry, String borderString){
 		
 		name = entry;
-		if (otherEntry != null) {
+		if (name.toUpperCase().equals("UNITED STATES")) {
+			alias.add("US");
+			alias.add("USA");
+		}
+		if ((otherEntry != null) && (! entry.toUpperCase().equals(otherEntry.toUpperCase()))) {
 			alias.add(otherEntry);
 		}
 		String borderName = "";
@@ -532,6 +582,8 @@ class Country{
 						}
 					}
 				}
+				
+				
 				counToAdd = counToAdd.strip();
 				addBorder(counToAdd);
 				counToAdd = "";
@@ -545,7 +597,9 @@ class Country{
 	}
 	
 	public void addAlias(String toAdd) {
-		alias.add(toAdd);
+		if (! name.equals(toAdd)) {
+			alias.add(toAdd);
+		}
 	}
 	
 	public void addCapDist(String destCounCode, Integer distanceKM) {
@@ -553,11 +607,15 @@ class Country{
 	}
 	
 	public void addBorder(String border){
+		if (name.equals("CANADA") && (border.equals("Denmark"))) {
+			return;
+		}
+
 		borders.add(border);
 	}
 	
 	public void setCost(int toSet) {
-		if (toSet < cost) {
+		if ((toSet < cost) || (cost == -1)) {
 			cost = toSet;
 		}
 	}
