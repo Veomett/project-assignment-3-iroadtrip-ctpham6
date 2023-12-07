@@ -132,6 +132,7 @@ public class IRoadTrip {
     		end = input;
     		
     		map.travel(start,end);
+    		map.resetTravel();
     		System.out.println("Enter the name of the first country (type EXIT to quit): ");
     		input = userInput.nextLine();
     	}
@@ -388,7 +389,10 @@ class worldMap{
 		endC = getEntry(end);
 		
 		if (startC == endC) {
-			System.out.println("* " + startC + " --> " + endC + " (0km.)");
+			System.out.println("* " + startC.name + " --> " + endC.name + " (0km.)");
+			return null;
+		} else if (isBorder(start, end) == true) {
+			System.out.println("* " + startC.name + " --> " + endC.name + " (" + startC.capitalDistances.get(endC.uniqueID) + "km.)");
 			return null;
 		}
 		
@@ -501,7 +505,7 @@ class worldMap{
 				return(c);
 			} else {
 				for (int i = 0; i < c.alias.size(); i++) {
-					if ((c.alias.get(i).toUpperCase().equals(term)) || (term.equals(c.alias.get(i).toUpperCase()))) {
+					if ((c.alias.get(i).toUpperCase().equals(term.toUpperCase())) || (term.toUpperCase().equals(c.alias.get(i).toUpperCase()))) {
 						return(c);
 					}
 				}
