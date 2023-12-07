@@ -1,4 +1,4 @@
-// NAME: Colin Pham         Date: 12/99/23
+// NAME: Colin Pham         Date: 12/6/23
 import java.util.List;
 import java.util.*;
 import java.io.*;
@@ -76,7 +76,7 @@ public class IRoadTrip {
     	}
     	
     	
-//    	map.printGraphedCountries();
+//   	map.printGraphedCountries();
 //    	map.printAlias();
     }
 
@@ -399,8 +399,8 @@ class worldMap{
 		
 		if ((startC.stranded == true) || (endC.stranded == true)) {
 			ArrayList<String> welp = new ArrayList<>();
-			welp.add("Countries Can Not Be Reached");
-			return(welp);
+			System.out.println("Countries Can Not Be Reached");
+			return(null);
 			
 		}
 		
@@ -426,10 +426,14 @@ class worldMap{
 		A.setCost(cost);
 		Country borderToCheck;
 		for (int i = 0; i < A.borders.size(); i++) {
+			if (A.name.equals("DENMARK")) {
+				System.out.println("DSJUI");
+			}
 			borderToCheck = getEntry(A.borders.get(i));
 			if ((borderToCheck != null) && (borderToCheck.stranded != true) && (borderToCheck.known.equals("false"))) {
 				dijkstra(borderToCheck, A.uniqueID, A.capitalDistances.get(borderToCheck.uniqueID));
 			}
+			System.out.println(A.name + " checked " + borderToCheck.name);
 		}
 		
 		
@@ -516,6 +520,7 @@ class worldMap{
 	
 	public void printGraphedCountries() {
 		for (Country c: countryList) {
+
 			System.out.println(c.name + " is to: " + c.uniqueID + " with borders: " + c.capitalDistances);
 			System.out.println("I have [" + c.capitalDistances.size() + "] borders!");
 		}
@@ -558,13 +563,23 @@ class Country{
 	
 	Country(String entry, String otherEntry, String borderString){
 		
-		name = entry;
+		if (entry.equals("MICRONESIA, FEDERATED STATES OF")) {
+			name = "MICRONESIA";
+		} else {
+			name = entry;
+		}
+		
 		if (name.toUpperCase().equals("UNITED STATES")) {
 			alias.add("US");
 			alias.add("USA");
 		}
 		if ((otherEntry != null) && (! entry.toUpperCase().equals(otherEntry.toUpperCase()))) {
 			alias.add(otherEntry);
+		}
+		
+		if (name.toUpperCase().equals("NORTH MACEDONIA")) {
+			name = "MACEDONIA";
+			alias.add("NORTH MACEDONIA");
 		}
 		String borderName = "";
 		int borderDistance = -1;
@@ -611,7 +626,8 @@ class Country{
 	}
 	
 	public void addBorder(String border){
-		if (name.equals("CANADA") && (border.equals("Denmark"))) {
+		
+		if (name.equals("CANADA") && (border.equals("Denmark")) || (name.equals("MOROCCO")) && (border.equals("Spain")) || ((border.equals("Gaza Strip"))) || (border.equals("Kosovo")) || (border.equals("Andorra")) || ((name.equals("DENMARK")) && (border.equals("Canada 1.3"))) || (border.equals("Holy See")) || (border.equals("Sardinia")) || (border.equals("Monaco")) || (border.equals("Gibraltar 1.2")) || (border.equals("Liechtenstein"))) {
 			return;
 		}
 
