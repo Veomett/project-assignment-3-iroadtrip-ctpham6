@@ -74,10 +74,6 @@ public class IRoadTrip {
     		System.err.println("Capital Distance CSV File Not Found");
     		System.exit(0);
     	}
-    	
-    	
-//   	map.printGraphedCountries();
-//    	map.printAlias();
     }
 
 
@@ -95,8 +91,7 @@ public class IRoadTrip {
 
 
     public List<String> findPath (String country1, String country2) {
-        // Replace with your code
-        return null;
+        return (map.travel(country1, country2, "Give Me List"));
     }
 
 
@@ -145,6 +140,7 @@ public class IRoadTrip {
         IRoadTrip a3 = new IRoadTrip(args);
         
         System.out.println(a3.getDistance("North korea", "south korea"));
+        System.out.println(a3.findPath("South Africa", "Morocco"));
         a3.acceptUserInput();
     }
 
@@ -407,6 +403,33 @@ class worldMap{
 		return(dijkstra(startC, endC));
 	}
 	
+	public List<String> travel(String start, String end, String mode) {
+		Country startC = null;
+		Country endC = null;
+		
+		startC = getEntry(start);
+		
+		endC = getEntry(end);
+		
+		if (startC == endC) {
+			System.out.println("* " + startC.name + " --> " + endC.name + " (0km.)");
+			return null;
+		} else if (isBorder(start, end) == true) {
+			System.out.println("* " + startC.name + " --> " + endC.name + " (" + startC.capitalDistances.get(endC.uniqueID) + "km.)");
+			return null;
+		}
+		
+		
+		if ((startC.stranded == true) || (endC.stranded == true)) {
+			ArrayList<String> welp = new ArrayList<>();
+			System.out.println("Countries Can Not Be Reached");
+			return(null);
+			
+		}
+		
+		return(dijkstra(startC, endC, mode));
+	}
+	
 	public ArrayList dijkstra(Country A, Country B) {
 		A.known = "true";
 		Country borderToCheck;
@@ -420,20 +443,31 @@ class worldMap{
 		return getPathing(A,B);
 	}
 	
-	public void dijkstra(Country A, String Origin, Integer cost) {
+	public List<String> dijkstra(Country A, Country B, String mode) {
 		A.known = "true";
-		A.path = Origin;
-		A.setCost(cost);
 		Country borderToCheck;
 		for (int i = 0; i < A.borders.size(); i++) {
-			if (A.name.equals("DENMARK")) {
-				System.out.println("DSJUI");
-			}
 			borderToCheck = getEntry(A.borders.get(i));
 			if ((borderToCheck != null) && (borderToCheck.stranded != true) && (borderToCheck.known.equals("false"))) {
 				dijkstra(borderToCheck, A.uniqueID, A.capitalDistances.get(borderToCheck.uniqueID));
 			}
-			System.out.println(A.name + " checked " + borderToCheck.name);
+		}
+		
+		return getPathing(A,B,mode);
+	}
+	
+	public void dijkstra(Country A, String Origin, Integer cost) {
+		A.known = "true";
+		if (A.path.equals("")) {
+			A.path = Origin;
+		}
+		A.setCost(cost, Origin);
+		Country borderToCheck;
+		for (int i = 0; i < A.borders.size(); i++) {
+			borderToCheck = getEntry(A.borders.get(i));
+			if ((borderToCheck != null) && (borderToCheck.stranded != true) && (borderToCheck.known.equals("false"))) {
+				dijkstra(borderToCheck, A.uniqueID, A.capitalDistances.get(borderToCheck.uniqueID) + cost);
+			}
 		}
 		
 		
@@ -487,6 +521,55 @@ class worldMap{
 		return pathing;
 	}
 	
+	public List<String> getPathing(Country A, Country B, String mode) {
+		
+		if (B.path.equals("")) {
+			System.err.println("A path between " + A.name + " and " + B.name + " is not possible");
+			return null;
+		}
+		
+		int dist = 0;
+		List<String> pathing = new ArrayList<>();
+		List<String> finalPath = new ArrayList<>();
+		Country medium = B;
+		String befName = "";
+		String medName = "";
+		
+		while (! B.path.equals("") && (! B.path.equals(A.uniqueID))) {
+			pathing.add(B.path);
+			for (Country c : countryList) {
+				if ((c.uniqueID != null) && (c.uniqueID.equals(B.path))) {
+					B = c;
+					break;
+				}
+			}
+		}
+		
+		for (int i = pathing.size(); i > -1; i--) {
+			for (Country c : countryList) {
+				if (c.uniqueID != null) {
+					if ((i != 0) && (c.uniqueID.equals(pathing.get(i-1)))) {
+						befName = c.name;
+						dist += c.cost;
+					} else if  ((i != pathing.size()) && (c.uniqueID.equals(pathing.get(i)))) {
+						medName = c.name;
+					}
+					
+				}
+			}
+			if (i == 0) {
+				dist += medium.cost;
+				finalPath.add(medName + " --> " + medium.name + " (" + dist + " km.)");
+			} else if (i == pathing.size()) {
+				finalPath.add(A.name + " --> " + befName + " (" + dist + " km.)");
+			} else {
+				finalPath.add(medName + " --> " + befName + " (" + dist + " km.)");
+			}
+		}
+		
+		return finalPath;
+	}
+	
 	public boolean find(String country) {
 		country = country.toUpperCase();
 		for (Country c : countryList) {
@@ -516,22 +599,6 @@ class worldMap{
 			}
 		}
 		return(null);
-	}
-	
-	public void printGraphedCountries() {
-		for (Country c: countryList) {
-
-			System.out.println(c.name + " is to: " + c.uniqueID + " with borders: " + c.capitalDistances);
-			System.out.println("I have [" + c.capitalDistances.size() + "] borders!");
-		}
-	}
-	
-	public void printAlias() {
-		for (Country c: countryList) {
-			for (int i = 0; i < c.alias.size(); i++) {
-				System.out.println(c.alias.get(i));
-			}
-		}
 	}
 	
 	public void resetTravel() {
@@ -572,6 +639,8 @@ class Country{
 		if (name.toUpperCase().equals("UNITED STATES")) {
 			alias.add("US");
 			alias.add("USA");
+		} else if (name.toUpperCase().equals("UNITED ARAB EMIRATES")) {
+			alias.add("UAE");
 		}
 		if ((otherEntry != null) && (! entry.toUpperCase().equals(otherEntry.toUpperCase()))) {
 			alias.add(otherEntry);
@@ -627,16 +696,20 @@ class Country{
 	
 	public void addBorder(String border){
 		
-		if (name.equals("CANADA") && (border.equals("Denmark")) || (name.equals("MOROCCO")) && (border.equals("Spain")) || ((border.equals("Gaza Strip"))) || (border.equals("Kosovo")) || (border.equals("Andorra")) || ((name.equals("DENMARK")) && (border.equals("Canada 1.3"))) || (border.equals("Holy See")) || (border.equals("Sardinia")) || (border.equals("Monaco")) || (border.equals("Gibraltar 1.2")) || (border.equals("Liechtenstein"))) {
+		if (name.equals("CANADA") && (border.equals("Denmark")) || (name.equals("MOROCCO")) && (border.equals("Spain")) || ((border.equals("Gaza Strip"))) || (border.equals("Kosovo")) || (border.equals("Andorra")) || ((name.equals("DENMARK")) && (border.equals("Canada 1.3"))) || (border.equals("Holy See")) || (border.equals("Sardinia")) || (border.equals("Monaco")) || (border.equals("Gibraltar 1.2")) || (border.equals("Liechtenstein")) || (border.equals("West Bank")) || (border.equals("South Sudan"))) {
 			return;
+		} else if (border.equals("Botswana 0.15")) {
+			border = "Botswana";
+		} else if (border.equals("Zambia 0.15")) {
+			border = "Zambia";
 		}
-
 		borders.add(border);
 	}
 	
-	public void setCost(int toSet) {
+	public void setCost(int toSet, String newPath) {
 		if ((toSet < cost) || (cost == -1)) {
 			cost = toSet;
+			path = newPath;
 		}
 	}
 }
