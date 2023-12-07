@@ -91,7 +91,9 @@ public class IRoadTrip {
 
 
     public List<String> findPath (String country1, String country2) {
-        return (map.travel(country1, country2, "Give Me List"));
+        List<String> toReturn = (map.travel(country1, country2, "Give Me List"));
+        map.resetTravel();
+        return (toReturn);
     }
 
 
@@ -138,9 +140,9 @@ public class IRoadTrip {
 
     public static void main(String[] args) {
         IRoadTrip a3 = new IRoadTrip(args);
-        
-        System.out.println(a3.getDistance("North korea", "south korea"));
-        System.out.println(a3.findPath("South Africa", "Morocco"));
+/////////////// It just hit me that the two implementations were supposed to help with the acceptUserInput() implementation, but I did it without them. You can remove the commend // to test them individually if you want //////////////////////////////////////////////////////        
+//        System.out.println(a3.getDistance("North korea", "south korea"));
+//        System.out.println(a3.findPath("South Africa", "Morocco"));
         a3.acceptUserInput();
     }
 
@@ -458,15 +460,17 @@ class worldMap{
 	
 	public void dijkstra(Country A, String Origin, Integer cost) {
 		A.known = "true";
-		if (A.path.equals("")) {
-			A.path = Origin;
-		}
+		A.path = Origin;
 		A.setCost(cost, Origin);
 		Country borderToCheck;
 		for (int i = 0; i < A.borders.size(); i++) {
 			borderToCheck = getEntry(A.borders.get(i));
 			if ((borderToCheck != null) && (borderToCheck.stranded != true) && (borderToCheck.known.equals("false"))) {
 				dijkstra(borderToCheck, A.uniqueID, A.capitalDistances.get(borderToCheck.uniqueID) + cost);
+			} else if ((borderToCheck != null) && (borderToCheck.known.equals("true"))) {
+				int toAdd = A.cost;
+				int pile = A.capitalDistances.get(borderToCheck.uniqueID);
+				borderToCheck.setCost((toAdd + pile), Origin);
 			}
 		}
 		
@@ -480,10 +484,10 @@ class worldMap{
 			return null;
 		}
 		
-		int dist = 0;
 		ArrayList<String> pathing = new ArrayList<>();
 		Country medium = B;
 		String befName = "";
+		int befCost = 0;
 		String medName = "";
 		
 		while (! B.path.equals("") && (! B.path.equals(A.uniqueID))) {
@@ -501,7 +505,7 @@ class worldMap{
 				if (c.uniqueID != null) {
 					if ((i != 0) && (c.uniqueID.equals(pathing.get(i-1)))) {
 						befName = c.name;
-						dist += c.cost;
+						befCost = c.cost;
 					} else if  ((i != pathing.size()) && (c.uniqueID.equals(pathing.get(i)))) {
 						medName = c.name;
 					}
@@ -509,12 +513,12 @@ class worldMap{
 				}
 			}
 			if (i == 0) {
-				dist += medium.cost;
-				System.out.println("* " + medName + " --> " + medium.name + " (" + dist + " km.)");
+
+				System.out.println("* " + medName + " --> " + medium.name + " (" + medium.cost + " km.)");
 			} else if (i == pathing.size()) {
-				System.out.println("* " + A.name + " --> " + befName + " (" + dist + " km.)");
+				System.out.println("* " + A.name + " --> " + befName + " (" + befCost + " km.)");
 			} else {
-				System.out.println("* " + medName + " --> " + befName + " (" + dist + " km.)");
+				System.out.println("* " + medName + " --> " + befName + " (" + befCost + " km.)");
 			}
 		}
 		
@@ -533,6 +537,7 @@ class worldMap{
 		List<String> finalPath = new ArrayList<>();
 		Country medium = B;
 		String befName = "";
+		int befCost = 0;
 		String medName = "";
 		
 		while (! B.path.equals("") && (! B.path.equals(A.uniqueID))) {
@@ -550,7 +555,7 @@ class worldMap{
 				if (c.uniqueID != null) {
 					if ((i != 0) && (c.uniqueID.equals(pathing.get(i-1)))) {
 						befName = c.name;
-						dist += c.cost;
+						befCost = c.cost;
 					} else if  ((i != pathing.size()) && (c.uniqueID.equals(pathing.get(i)))) {
 						medName = c.name;
 					}
@@ -558,12 +563,11 @@ class worldMap{
 				}
 			}
 			if (i == 0) {
-				dist += medium.cost;
-				finalPath.add(medName + " --> " + medium.name + " (" + dist + " km.)");
+				finalPath.add(medName + " --> " + medium.name + " (" + medium.cost + " km.)");
 			} else if (i == pathing.size()) {
-				finalPath.add(A.name + " --> " + befName + " (" + dist + " km.)");
+				finalPath.add(A.name + " --> " + befName + " (" + befCost + " km.)");
 			} else {
-				finalPath.add(medName + " --> " + befName + " (" + dist + " km.)");
+				finalPath.add(medName + " --> " + befName + " (" + befCost + " km.)");
 			}
 		}
 		
@@ -641,6 +645,8 @@ class Country{
 			alias.add("USA");
 		} else if (name.toUpperCase().equals("UNITED ARAB EMIRATES")) {
 			alias.add("UAE");
+		} else if (name.toUpperCase().equals("UNITED KINGDOM")) {
+			alias.add("UK");
 		}
 		if ((otherEntry != null) && (! entry.toUpperCase().equals(otherEntry.toUpperCase()))) {
 			alias.add(otherEntry);
@@ -704,6 +710,10 @@ class Country{
 			border = "Zambia";
 		}
 		borders.add(border);
+	}
+	
+	public void setCost(int toSet) {
+		cost = toSet;
 	}
 	
 	public void setCost(int toSet, String newPath) {
