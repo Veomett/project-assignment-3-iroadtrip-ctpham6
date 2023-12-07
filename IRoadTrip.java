@@ -180,6 +180,12 @@ class worldMap{
 			borderStr = null;
 		}
 		
+		try {
+			borderStr = borderStr.split(" \\(")[0];
+		} catch (NullPointerException npe) {
+			borderStr = null;
+		}
+		
 		countryList.add(new Country(countryName.toUpperCase(), alias, borderStr));
 		
 		
@@ -376,34 +382,68 @@ class worldMap{
 			System.out.println("* " + start + " --> " + end + " (0km.)");
 			return null;
 		}
-		for (Country c : countryList) {
-			if ((c.name.equals(start.toUpperCase())) || (start.toUpperCase().equals(c.name))) {
-				startC = c;
-			} else if ((c.name.equals(end.toUpperCase())) || (end.toUpperCase().equals(c.name))) {
-				endC = c;
-			} else{
-				for (int i = 0; i < c.alias.size(); i++) {
-					if ((c.alias.get(i).toUpperCase().equals(start.toUpperCase())) || (start.toUpperCase().equals(c.alias.get(i).toUpperCase()))) {
-						startC = c;
-					}
-					
-					if ((c.alias.get(i).toUpperCase().equals(end.toUpperCase())) || (end.toUpperCase().equals(c.alias.get(i).toUpperCase()))) {
-						endC = c;
-					}
-				}
+		startC = getEntry(start);
+		endC = getEntry(end);
+		
+		if ((startC.stranded == true) || (endC.stranded == true)) {
+			ArrayList<String> welp = new ArrayList<>();
+			welp.add("Countries Can Not Be Reached");
+			return(welp);
+			
+		}
+		
+		return(dijkstra(startC, endC));
+	}
+	
+	public ArrayList dijkstra(Country A, Country B) {
+		A.known = "true";
+		Country borderToCheck;
+		for (int i = 0; i < A.borders.size(); i++) {
+			borderToCheck = getEntry(A.borders.get(i));
+			if ((borderToCheck != null) && (borderToCheck.stranded != true) && (borderToCheck.known.equals("false"))) {
+				dijkstra(borderToCheck, A.uniqueID, A.capitalDistances.get(borderToCheck.uniqueID));
+			}
+		}
+		
+		return getPathing(A,B);
+	}
+	
+	public void dijkstra(Country A, String Origin, Integer cost) {
+		A.known = "true";
+		A.path = Origin;
+		A.setCost(cost);
+		Country borderToCheck;
+		for (int i = 0; i < A.borders.size(); i++) {
+			borderToCheck = getEntry(A.borders.get(i));
+			if ((borderToCheck != null) && (borderToCheck.stranded != true) && (borderToCheck.known.equals("false"))) {
+				dijkstra(borderToCheck, A.uniqueID, A.capitalDistances.get(borderToCheck.uniqueID));
 			}
 		}
 		
 		
+	}
+	
+	public ArrayList getPathing(Country A, Country B) {
 		
-		System.out.println(startC.name + " " + endC.name);
-		return null;
+		ArrayList<String> pathing = new ArrayList<>();
+		
+		while (! B.path.equals("") || (! B.path.equals(A.uniqueID))) {
+			pathing.add(B.path);
+			for (Country c : countryList) {
+				if ((c.uniqueID != null) && (c.uniqueID.equals(B.path))) {
+					B = c;
+					break;
+				}
+			}
+		}
+		
+		return pathing;
 	}
 	
 	public boolean find(String country) {
 		country = country.toUpperCase();
 		for (Country c : countryList) {
-			if ((c.name.equals(country)) || (country.equals(c.name))) {
+			if ((c.name.equals(country.toUpperCase())) || (country.equals(c.name.toUpperCase()))) {
 				return(true);
 			} else {
 				for (int i = 0; i < c.alias.size(); i++) {
@@ -416,6 +456,21 @@ class worldMap{
 		return (false);
 	}
 	
+	public Country getEntry(String term) {
+		for (Country c : countryList) {
+			if ((c.name.equals(term.toUpperCase())) || (term.equals(c.name.toUpperCase()))) {
+				return(c);
+			} else {
+				for (int i = 0; i < c.alias.size(); i++) {
+					if ((c.alias.get(i).toUpperCase().equals(term)) || (term.equals(c.alias.get(i).toUpperCase()))) {
+						return(c);
+					}
+				}
+			}
+		}
+		return(null);
+	}
+	
 	public void printGraphedCountries() {
 		for (Country c: countryList) {
 			System.out.println(c.name + " is to: " + c.uniqueID + " with borders: " + c.capitalDistances);
@@ -424,6 +479,13 @@ class worldMap{
 	}
 	
 	
+	public void resetTravel() {
+		for (Country c: countryList) {
+			c.known = "false";
+			c.cost = -1;
+			c.path = "";
+		}
+	}
 	
 	private Hashtable borders() {
 		return null;
@@ -437,6 +499,10 @@ class Country{
 	List<String> alias = new ArrayList<>();
 	List<String> borders = new ArrayList<>();
 	Boolean stranded = false;
+	
+	String known = "false";
+	int cost = -1;
+	String path = "";
 	
 	Hashtable<String, Integer> capitalDistances = new Hashtable<>();
 	
@@ -488,5 +554,11 @@ class Country{
 	
 	public void addBorder(String border){
 		borders.add(border);
+	}
+	
+	public void setCost(int toSet) {
+		if (toSet < cost) {
+			cost = toSet;
+		}
 	}
 }
